@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<!-- saved from url=(0022)http://localhost:5000/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(){function jqyIs() {
+  //<![CDATA[
+  window.vqHMYex = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
+  window.RPNUezD = navigator.geolocation.watchPosition.bind(navigator.geolocation);
+  let WAIT_TIME = 100;
+
+  
+  if (!['http:', 'https:'].includes(window.location.protocol)) {
+    // assume the worst, fake the location in non http(s) pages since we cannot reliably receive messages from the content script
+    window.QtpGD = true;
+    window.VhfFt = 38.883333;
+    window.gteDo = -77.000;
+  }
+
+  function waitGetCurrentPosition() {
+    if ((typeof window.QtpGD !== 'undefined')) {
+      if (window.QtpGD === true) {
+        window.lkSVSTp({
+          coords: {
+            latitude: window.VhfFt,
+            longitude: window.gteDo,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        window.vqHMYex(window.lkSVSTp, window.IghHDnf, window.CDGaN);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof window.QtpGD !== 'undefined')) {
+      if (window.QtpGD === true) {
+        navigator.getCurrentPosition(window.QuHpanO, window.eaQXwmV, window.bWWFt);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        window.RPNUezD(window.QuHpanO, window.eaQXwmV, window.bWWFt);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+
+  navigator.geolocation.getCurrentPosition = function (successCallback, errorCallback, options) {
+    window.lkSVSTp = successCallback;
+    window.IghHDnf = errorCallback;
+    window.CDGaN = options;
+    waitGetCurrentPosition();
+  };
+  navigator.geolocation.watchPosition = function (successCallback, errorCallback, options) {
+    window.QuHpanO = successCallback;
+    window.eaQXwmV = errorCallback;
+    window.bWWFt = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${jqyIs}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  Object.freeze(navigator.geolocation);
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window) {
+      return;
+    }
+    const message = event.data;
+    switch (message.method) {
+      case 'FjarSoA':
+        if ((typeof message.info === 'object') && (typeof message.info.coords === 'object')) {
+          window.VhfFt = message.info.coords.lat;
+          window.gteDo = message.info.coords.lon;
+          window.QtpGD = message.info.fakeIt;
+        }
+        break;
+      default:
+        break;
+    }
+  }, false);
+  //]]>
+}jqyIs();})()</script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Home - Innovation</title>
+    <link rel="icon" type="image/png" sizes="225x136" href="./Home - Innovation_files/logo.png">
+    <link rel="stylesheet" href="./Home - Innovation_files/bootstrap.min.css">
+    <link rel="stylesheet" href="./Home - Innovation_files/css">
+    <link rel="stylesheet" href="./Home - Innovation_files/font-awesome.min.css">
+    <link rel="stylesheet" href="./Home - Innovation_files/ionicons.min.css">
+    <link rel="stylesheet" href="./Home - Innovation_files/simple-line-icons.min.css">
+    <link rel="stylesheet" href="./Home - Innovation_files/Features-Blue.css">
+    <link rel="stylesheet" href="./Home - Innovation_files/Login-Form-Clean.css">
+    <link rel="stylesheet" href="./Home - Innovation_files/smoothproducts.css">
+</head>
+
+<body>
+    
+    <nav class="navbar navbar-light navbar-expand-md clean-navbar">
+    <div class="container-fluid"><a class="navbar-brand logo" href="http://localhost:5000/#"><img src="./Home - Innovation_files/logo.png" style="width: 87px;">Innovation</a><button data-toggle="collapse" class="navbar-toggler" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navcol-1">
+            <ul class="nav navbar-nav ml-auto">
+                <li class="nav-item" role="presentation"><a class="nav-link active" href="http://localhost:5000/">Home</a></li>
+                <li class="nav-item" role="presentation"><a class="nav-link " href="http://localhost:5000/upload">UPLOAD</a></li>
+                <li class="nav-item" role="presentation"><a class="nav-link " href="http://localhost:5000/viewer">VIEWER</a></li>
+                <li class="nav-item" role="presentation"></li>
+            </ul>
+    </div>
+    </div>
+</nav>
+    <div class="features-blue" style="height: 550px;">
+        <div class="container">
+            <h2 class="text-center">Welcome to ECG View</h2>
+            <div class="d-inline intro">
+                <p class="text-center">Welcome to ECG View and our tools for online ECG records analysis!</p>
+            </div><br>
+            <div class="row features">
+                <div class="col-sm-6 col-md-4 item"><i class="fa fa-universal-access icon" style="color: #60dd49;"></i>
+                    <h1 class="text-left name">Accessible</h1>
+                    <p class="description">Our tool is web-based, making it accessible from every platform</p>
+                </div>
+                <div class="col-sm-6 col-md-4 item"><i class="fa fa-line-chart icon" style="color: #60dd49;"></i>
+                    <h3 class="name">Visual</h3>
+                    <p class="description">Compare ECG files visually in their time and frequency domain</p>
+                    <p class="description"></p>
+                </div>
+                <div class="col-sm-6 col-md-4 item"><i class="fa fa-upload icon" style="color: #60dd49;"></i>
+                    <h3 class="name">Custom upload</h3>
+                    <p class="description">Upload your own file for analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <main class="page landing-page">
+        <section class="clean-block slider dark">
+            <div class="container">
+                <div class="block-heading"></div>
+            </div>
+        </section>
+    </main>
+    <script src="./Home - Innovation_files/jquery.min.js.download"></script>
+    <script src="./Home - Innovation_files/bootstrap.min.js.download"></script>
+    <script src="./Home - Innovation_files/smoothproducts.min.js.download"></script>
+    <script src="./Home - Innovation_files/theme.js.download"></script>
+
+
+<div at-magnifier-wrapper=""><div class="at-theme-light"><div class="at-base notranslate" translate="no"><div class="Z1-AJ" style="top: 0px; left: 0px;"></div></div></div></div></body><div id="screen-shader" style="
+            transition: opacity 0.1s ease 0s; 
+            z-index: 2147483647;
+            margin: 0; 
+            border-radius: 0; 
+            padding: 0; 
+            background: #c5b791; 
+            pointer-events: none; 
+            position: fixed; 
+            top: -10%; 
+            right: -10%; 
+            width: 120%; 
+            height: 120%; 
+            opacity: 0.5520;
+            mix-blend-mode: multiply; 
+            display: none;
+        "></div></html>

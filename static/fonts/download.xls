@@ -1,0 +1,23 @@
+<table border='2px'><tr bgcolor='#87AFC6'>
+                                                                        <th>File</th>
+                                                                        <th>Start</th>
+                                                                        <th>End</th>
+                                                                        <th>Duration</th>
+                                                                        <th>L1</th>
+                                                                        <th>V1</th>
+                                                                        <th>L2</th>
+                                                                        <th>V2</th>
+                                                                        <th>L3</th>
+                                                                        <th>V3</th>
+                                                                        <th>LM</th>
+                                                                        <th>VM</th>
+                                                                        <th>LN</th>
+                                                                        <th>VN</th>
+                                                                        <th>A1</th>
+                                                                        <th>A2</th>
+                                                                        <th>A3</th>
+                                                                        <th>AM</th>
+                                                                        <th>AL</th>
+                                                                        <th>AH</th>
+                                                                        <th>AT</th>
+                                                                    </tr><td>118e00.ecg</td><td>755.0</td><td>759.0</td><td>4.0</td><td>5.5000</td><td>0.017096</td><td>7.0000</td><td>0.016889</td><td>1.5000</td><td>0.014944</td><td>0.0000</td><td>0.0000</td><td>1.5000</td><td>0.014944</td><td>0.029384</td><td>0.030735</td><td>0.030735</td><td>0.0000</td><td>0.012146</td><td>0.042302</td><td>0.054449</td></tr><td>118e00.ecg</td><td>0.0</td><td>4.0</td><td>4.0</td><td>4.7500</td><td>0.017128</td><td>6.0000</td><td>0.017104</td><td>7.0000</td><td>0.012727</td><td>1.2500</td><td>0.016769</td><td>1.2500</td><td>0.016769</td><td>0.021619</td><td>0.031455</td><td>0.031455</td><td>0.028226</td><td>0.0082431</td><td>0.029544</td><td>0.037787</td></tr></table>

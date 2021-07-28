@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Home - Innovation</title>
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,400i,700,700i,600,600i">
+    <link rel="stylesheet" href="static/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="static/fonts/ionicons.min.css">
+    <link rel="stylesheet" href="static/fonts/simple-line-icons.min.css"> {% include '_stylesheets.html' %}
+
+
+
+
+
+    <script>
+        function submitform() {
+            $('form#uploadform').submit();
+        }
+    </script>
+</head>
+
+<body>
+    {% set active_page = 'upload' %} {% include 'navbar.html' %}
+    <div></div>
+    <div class="login-clean" style="padding: 30px;">
+        <div class="container">
+            {% if msg %}
+            <div class="alert alert-danger text-center" role="alert"><span><strong>
+                {{ msg if msg else "" }}</strong></span></div>
+            {% endif %}
+        </div>
+        <form class="shadow" id="uploadform" action="/uploader" method="POST" enctype="multipart/form-data">
+            <h2 class="sr-only">Login Form</h2><small class="form-text text-muted">Upload a file</small>
+            <div class="illustration"><i class="icon ion-upload" style="color: rgb(85,136,199);"></i></div>
+            <p>Please choose ECG file:</p>
+            <div class="col" style="margin: -12px;padding: 18px;">
+                <input name="file" type="file" accept=".ecg,.ekg,.ecgplus"></input><br></div>
+
+            <div class="form-row">
+                <div class="col">
+                    <p>Please choose appropriate frequency:</p>
+                    <select id="select" name="frequency" class="form-control">
+                        <optgroup label="Frequencies">
+						    <option value="122">122 Hz</option>
+                            <option value="125" selected="">125 Hz</option>
+                            <option value="128">128 Hz</option>
+                            <option value="150">150 Hz</option>
+                            <option value="180">180 Hz</option>
+                            <option value="250">250 Hz</option>
+                            <option value="360">360 Hz</option>
+                            <option value="512">512 Hz</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            <div class="container" style="padding: 3px;"><br>
+                <div class="form-row">
+                    <div class="col d-xl-flex align-items-xl-end">
+                        <button class="btn btn-info d-xl-flex flex-column align-items-end justify-content-xl-center" type="submit" formmethod="post" formaction="/uploader">Submit</button></div>
+        </form>
+        </div>
+        </div>
+        <div></div>
+        <div></div>
+
+    </div>
+    <main class="page landing-page">
+        <section class="clean-block slider dark" style="padding-bottom: 0;">
+            {% include 'footer.html' %}
+        </section>
+    </main>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.10.0/baguetteBox.min.js"></script>
+    <script src="assets/js/smoothproducts.min.js"></script>
+    <script src="assets/js/theme.js"></script>
+</body>
+
+</html>

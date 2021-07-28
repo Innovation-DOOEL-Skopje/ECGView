@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Home - Innovation</title>
+    {% include '_stylesheets.html' %}
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+
+    <script>
+        var names = Array();
+        var file_frequency = Array;
+        file_frequency[0] = 250;
+        file_frequency[1] = 250
+        var max_times = Array();
+        max_times[0] = 520;
+        max_times[1] = 520;
+        var datanow = Array(2);
+        var saved = Array(2);
+        saved[0] = false;
+
+        var dataTime = Array(2);
+        var dataFrequencies = Array(2);
+
+        var current_start_time = Array(2);
+        current_start_time[0] = 0;
+        var current_duration_time = Array(2);
+        current_duration_time[0] = 4;
+        var last_start_time = Array(2);
+        last_start_time[0] = 0;
+        var last_duration_time = Array(2);
+        last_duration_time[0] = 4;
+
+        var trace_freq1 = Array(2);
+        trace_freq1[0] = {};
+
+        var trace_freq2 = Array(2);
+        trace_freq2[0] = {};
+        trace_freq2[1] = {};
+
+        var in_progress = Array(2)
+
+        in_progress[0] = false
+        in_progress[1] = false
+        in_progress_switch = function(inProgress = true, plot_no = 1) {
+            in_progress[plot_no - 1] = inProgress
+            $('#rangeInputStart' + plot_no).prop("disabled", inProgress);
+            $('#start_time_hhmmss' + plot_no).prop("disabled", inProgress);
+            $('#duration_input' + plot_no).prop("disabled", inProgress);
+            $('#file_input' + plot_no).prop("disabled", inProgress);
+            $('#db_name' + plot_no).prop("disabled", inProgress);
+
+            if (inProgress) {
+                $("#spinner" + plot_no).css("visibility", "visible");
+                $("#spinner" + plot_no).css("height", "auto");
+                $("#spinner" + plot_no).css("width", "auto");
+                $("#previous" + plot_no).css("visibility", "collapse");
+                $("#previous" + plot_no).css("height", "0");
+                $("#previous" + plot_no).css("width", "0");
+
+            } else {
+                $("#previous" + plot_no).css("visibility", "visible");
+                $("#previous" + plot_no).css("height", "auto");
+                $("#previous" + plot_no).css("width", "auto");
+                $("#spinner" + plot_no).css("visibility", "collapse");
+                $("#spinner" + plot_no).css("height", "0");
+                $("#spinner" + plot_no).css("width", "0");
+            }
+
+        }
+
+        // var trace3 = {
+        //     x: [0, 1, 2, 3, 4, 5, 6],
+        //     y: [1, 9, 4, 7, 5, 2, 4],
+        //     mode: 'markers',
+        //     marker: {
+        //         size: [1],
+        //     }
+        // };
+        // dataTime = [dataTime,trace1]
+
+        var layout = {
+            margin: {
+                l: 50,
+                r: 30,
+                b: 50,
+                t: 50,
+                pad: 4
+            },
+            xaxis: {
+                fixedrange: true,
+                animate: false,
+                autorange: true,
+                showgrid: true,
+                zeroline: false,
+                showline: true,
+                autotick: true,
+                showticklabels: true,
+                title: {
+                    text: "Time (seconds)",
+                    standoff: 20
+                },
+            },
+            yaxis: {
+                range: [-1, 1],
+                fixedrange: true,
+                animate: false,
+                autorange: true,
+                showgrid: true,
+                zeroline: false,
+                showline: true,
+                autotick: true,
+                showticklabels: true,
+                title: {
+                    text: "Amplitude",
+                    standoff: 20
+                },
+            }
+        };
+        var layout2 = {
+            margin: {
+                l: 50,
+                r: 30,
+                b: 50,
+                t: 50,
+                pad: 4
+            },
+            showlegend: true,
+            legend: {
+                x: 1,
+                xanchor: 'right',
+                y: 1
+            },
+            xaxis: {
+                range: [0, 10],
+                autorange: false,
+                showgrid: true,
+                zeroline: false,
+                showline: true,
+                title: {
+                    text: "Frequency (Hz)",
+                    standoff: 20
+                },
+            },
+            yaxis: {
+                range: [0, 0.04],
+                automargin: true,
+                showgrid: true,
+                zeroline: false,
+                showline: true,
+            }
+        };
+
+        var config = {
+            responsive: true,
+            displayModeBar: false,
+            scrollZoom: false
+        }
+        var config2 = {
+            responsive: true,
+            scrollZoom: false,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['hoverClosestGl2d', 'hoverClosestPie', 'toggleHover', 'toImage', 'sendDataToCloud',
+                'toggleSpikelines', 'hoverClosestCartesian', 'hoverCompareCartesian', 'lasso2d', 'select2d'
+            ]
+        }
+
+        function updateTimeData(timeXdata, timeYdata, plot_no = 1) {
+            dataTime[plot_no - 1] = [{
+                x: timeXdata,
+                y: timeYdata,
+                type: 'scatter',
+                name: 'Time domain'
+            }];
+        }
+
+        function updateFrequenciesData(timeXdata, timeYdata, plot_no = 1) {
+            dataFrequencies[plot_no - 1] = [{
+                x: timeXdata,
+                y: timeYdata,
+                type: 'scatter',
+                name: 'Frequency domain',
+                line: {
+                    color: 'red'
+                }
+            }];
+
+            trace_freq1[plot_no - 1] = {
+                x: timeXdata,
+                y: timeYdata,
+                mode: 'lines',
+                type: 'scatter',
+                name: names[0],
+                line: {
+                    color: 'red'
+                }
+            };
+        }
+
+        function save_to_compare(plot_no = 1) {
+            trace_freq2[plot_no - 1] = {
+                x: trace_freq1[plot_no - 1].x,
+                y: trace_freq1[plot_no - 1].y,
+                mode: 'lines',
+                type: 'scatter',
+                name: names[0],
+                line: {
+                    color: 'black'
+                }
+            }
+            drawFFTPlot(plot_no);
+        }
+
+        function clear_compare(plot_no = 1) {
+            trace_freq2[plot_no - 1] = {};
+            drawFFTPlot(plot_no);
+        }
+
+        function autorangeChart(plot_no = 1) {
+            Plotly.relayout('timedomain_plot' + plot_no, {
+                'xaxis.autorange': true,
+                'yaxis.autorange': true
+            });
+        }
+
+
+        function drawTimePlot(plot_no = 1) {
+            timedomaindiv = "timedomain_plot" + plot_no;
+
+            Plotly.newPlot(timedomaindiv, dataTime[plot_no - 1], layout, config);
+
+            Plotly.relayout('timedomain_plot' + plot_no, {
+                'xaxis.autorange': true,
+                'yaxis.autorange': true
+            });
+            autorangeChart(plot_no);
+        }
+
+
+        function drawFFTPlot(plot_no = 1) {
+            var data = [trace_freq1[plot_no - 1], trace_freq2[plot_no - 1]];
+
+            Plotly.newPlot('freqdomain_plot' + plot_no, data, layout2, config2);
+        }
+    </script>
+    <script>
+        function redraw_to_start(plot_no = 1) {
+            if (in_progress[plot_no - 1]) {
+                return;
+            }
+
+            $("#rangeInputStart" + plot_no).val(0);
+            ajax_redraw(0, false, plot_no);
+        }
+
+        function redraw_to_end(plot_no = 1) {
+            if (in_progress[plot_no - 1]) {;
+                return;
+            }
+            let max_time = max_times[plot_no - 1];
+
+            let dur_input_id = "#duration_input" + plot_no;
+            dur_input = parseInt($(dur_input_id).val());
+
+            $("#rangeInputStart" + plot_no).val(max_time - dur_input);
+            ajax_redraw(0, false, plot_no);
+        }
+
+        function change_time(plot_no = 1) {
+            let max_time = max_times[plot_no - 1];
+            let dur_input_id = "#duration_input1" + plot_no;
+
+            let dur_input = parseInt($(dur_input_id).val());
+
+            let hms = hmsToSecondsOnly(getTimeInput(plot_no));
+
+            if (hms + dur_input > max_times[plot_no - 1]) {
+                $("#start_time_hhmmss" + plot_no).val(tohhmmss(current_start_time[plot_no - 1]));
+                return;
+            }
+
+            current_start_time[plot_no - 1] = hms;
+
+            refresh_timebars(plot_no);
+            ajax_redraw(undefined, undefined, plot_no);
+        }
+
+        var ajax_draw_to;
+
+        function ajax_redraw(timediff = 0, last = false, plot_no = 1) {
+            if (in_progress[plot_no - 1]) {
+                return;
+            }
+
+            var vstart = $("#rangeInputStart" + plot_no).val();
+            var dur_input = parseInt($("#duration_input" + plot_no).val());
+            var filestr = $("#filename" + plot_no).val();
+
+            if (+vstart > max_times[plot_no - 1]) {
+                redraw_to_end();
+                return;
+            }
+
+
+            if ((+vstart + timediff) < 0 || +vstart + timediff + dur_input > max_times[plot_no - 1]) {
+                return;
+            }
+
+            if (last == false) {
+                last_start_time[plot_no - 1] = current_start_time[plot_no - 1];
+                last_duration_time[plot_no - 1] = current_duration_time[plot_no - 1];
+
+                current_start_time[plot_no - 1] = +vstart + timediff;
+                current_duration_time[plot_no - 1] = dur_input;
+            } else {
+                let last_start_time_tmp = last_start_time[plot_no - 1];
+                let last_duration_time_tmp = last_duration_time[plot_no - 1];
+
+                last_start_time[plot_no - 1] = current_start_time[plot_no - 1];
+                last_duration_time[plot_no - 1] = current_duration_time[plot_no - 1];
+
+                vstart = last_start_time_tmp;
+                dur_input = last_duration_time_tmp;
+
+                current_start_time[plot_no - 1] = vstart;
+                current_duration_time[plot_no - 1] = dur_input;
+
+            };
+
+
+            var vstart = +vstart + timediff;
+            var vend = +vstart + dur_input;
+
+
+            dbstr = $("#db_name" + plot_no).val();
+            filestr = $("#file_input" + plot_no).val();
+
+            refresh_timebars(plot_no);
+            // return;
+            ajax_draw(filestr, vstart, vend, dbstr, plot_no);
+
+        }
+
+
+        function ajax_draw(filestr, vstart, vend, dbstr, plot_no = 1) {
+            if (in_progress[plot_no - 1])
+                return;
+
+            in_progress_switch(true, plot_no);
+
+            maxSeconds = $.ajax({
+                type: "GET",
+                url: "/maxSeconds_for_file/" + dbstr + "/" + filestr,
+                async: false
+            }).responseText;
+            max_times[plot_no - 1] = parseInt(maxSeconds);
+
+            $.ajax({
+                type: 'GET',
+                url: "fft?file=" + filestr + "&start=" + vstart + "&end=" + vend + "&db=" + dbstr,
+                success: function(data, textStatus) {
+                    names[0] = filestr.replace(".ecg", "").replace(".ekg", "") + " " + vstart + "-" + vend + "(" + (+vend -
+                        vstart) + "s)";
+                    datanow[plot_no - 1] = data;
+                    updateTimeData(datanow[plot_no - 1].timeDataPoints, data.timeValuePoints, plot_no);
+                    updateFrequenciesData(datanow[plot_no - 1].freqDataPoints, data.freqValuePoints, plot_no);
+
+                    drawTimePlot(plot_no);
+                    drawFFTPlot(plot_no);
+                    saved[plot_no - 1] = false;
+                    in_progress_switch(false, plot_no);
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    if (vstart > max_times[plot_no - 1]) {
+                        redraw_to_end();
+                    }
+                    in_progress_switch(false, plot_no);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+
+            var hhmmss1_to;
+            $("#start_time_hhmmss1").change(function() {
+                clearTimeout(hhmmss1_to);
+                durationinput_to = setTimeout(function() {
+                    change_time(1);
+                }, 600);
+
+            });
+
+            var hhmmss2_to;
+            $("#start_time_hhmmss2").change(function() {
+                clearTimeout(hhmmss2_to);
+                durationinput_to = setTimeout(function() {
+                    change_time(2);
+                }, 600);
+
+            });
+
+            var durationinput_to1;
+            $('#duration_input1').change(function() {
+                clearTimeout(durationinput_to1);
+                durationinput_to1 = setTimeout(function() {
+                    ajax_redraw();
+                }, 600);
+            });
+
+            var durationinput_to2;
+            $('#duration_input2').change(function() {
+                clearTimeout(durationinput_to2);
+                durationinput_to2 = setTimeout(function() {
+                    ajax_redraw(undefined, undefined, 2);
+                }, 600);
+            });
+        });
+
+        function correctTimeInput(timeseconds, plot_no = 1) {
+            $('#start_time_hhmmss' + plot_no).val(tohhmmss(timeseconds));
+        }
+
+        tohhmmss = function(timeseconds) {
+            var sec_num = parseInt(timeseconds, 10); // don't forget the second param
+            var hours = Math.floor(sec_num / 3600);
+            var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+            var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+            if (hours < 10) {
+                hours = "0" + hours;
+            }
+            if (minutes < 10) {
+                minutes = "0" + minutes;
+            }
+            if (seconds < 10) {
+                seconds = "0" + seconds;
+            }
+            return hours + ':' + minutes + ':' + seconds;
+        }
+
+        function hmsToSecondsOnly(str) {
+            var p = str.split(':'),
+                s = 0,
+                m = 1;
+
+            while (p.length > 0) {
+                s += m * parseInt(p.pop(), 10);
+                m *= 60;
+            }
+
+            return s;
+        }
+
+        function refresh_timebars(plot_no = 1) {
+            $("#rangeInputStart" + plot_no).val(current_start_time[plot_no - 1]);
+
+
+            $("#duration_input" + plot_no).val(current_duration_time[plot_no - 1]);
+
+            $("#rangeInputStart" + plot_no).attr('max', (+max_times[plot_no - 1] - current_duration_time[plot_no - 1]));
+            $("#start_time_hhmmss" + plot_no).val(tohhmmss(current_start_time[plot_no - 1]));
+        }
+
+        function repopulate_ecgs(plot_no = 1, uploaded = "") {
+            var db_name = $("#db_name" + plot_no).val();
+            ufiles = [uploaded];
+            if (uploaded != "" && db_name == "Uploads") {
+                files = [uploaded];
+
+                $('#file_input' + plot_no)
+                    .find('option')
+                    .remove()
+                    .end();
+
+                files.forEach(element => {
+                    $('#file_input' + plot_no).append($('<option>', {
+                        value: element,
+                        text: element.replace(".ecg", "").replace(".ekg", "")
+                    }));
+                });
+                ajax_redraw(0, undefined, plot_no);
+                // return;
+            }
+
+
+            $.ajax({
+                type: 'GET',
+                url: "/all_ecgs/" + db_name,
+                success: function(data, textStatus) {
+                    files_for_db = JSON.parse(data);
+
+                    $('#file_input' + plot_no)
+                        .find('option')
+                        .remove()
+                        .end();
+
+                    files_for_db.forEach(element => {
+                        $('#file_input' + plot_no).append($('<option>', {
+                            value: element,
+                            text: element.replace(".ecg", "").replace(".ekg", "")
+                        }));
+                    });
+
+                    ufiles = [uploaded];
+                    ufiles.forEach(element => {
+                        $('#file_input' + plot_no).append($('<option>', {
+                            value: element,
+                            text: element.replace(".ecg", "").replace(".ekg", "")
+                        }));
+                    });
+
+                    if (uploaded != "" && db_name == "Uploads")
+                        $("#file_input" + plot_no).val($("#file_input" + plot_no + " option:last").val());
+                    ajax_redraw(0, undefined, plot_no);
+                    return;
+
+
+                    $("#file_input" + plot_no).html($("#file_input" + plot_no + " option").sort(function(a, b) {
+                        return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+                    }));
+                    $("#file_input" + plot_no).val($("#file_input" + plot_no + " option:first").val());
+                    ajax_redraw(0, undefined, plot_no);
+
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    redraw_to_end(plot_no);
+                }
+            });
+
+        }
+
+        function clear_table() {
+            $("#table_results td").remove();
+            saved[0] = false;
+        }
+
+        function add_table_row(plot_no = 1) {
+            if (saved[plot_no - 1] == true) {
+                return;
+            }
+            var newRowContent = "<tr>";
+            newRowContent += "<td>" + datanow[plot_no - 1].file + "</td><td>" + datanow[plot_no - 1].start_time +
+                "</td><td>" + datanow[plot_no - 1].end_time + "</td><td>" + datanow[plot_no - 1].duration_time + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].L1.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].V1
+                .toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].L2.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].V2
+                .toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].L3.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].V3
+                .toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].LM.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].VM
+                .toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].LN.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].VN
+                .toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].A1.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].A2
+                .toPrecision(5) + "</td><td>" + datanow[plot_no - 1].A3.toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].AM.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].AL
+                .toPrecision(5) + "</td>";
+            newRowContent += "<td>" + datanow[plot_no - 1].AH.toPrecision(5) + "</td><td>" + datanow[plot_no - 1].AT
+                .toPrecision(5) + "</td>";
+            newRowContent += "</tr>";
+            $("#table_results tbody").append(newRowContent);
+            saved[plot_no - 1] = true;
+        }
+
+        getTimeInput = function(plot_no = 1) {
+            let time = $("#start_time_hhmmss" + plot_no).val();
+            if (time.length < 6) { // missing :ss on chrome
+                time += ':00'; // add it ourselves
+            }
+            return time;
+        }
+    </script>
+</head>
+
+<body>
+    {% set active_page = 'viewer' %} {% include 'navbar.html' %}
+    <div class="login-clean" style="padding: 5px;">
+        <div class="card-group" style="display: block;">
+            <div class="card">
+                <div class="card-group">
+                    <div class="card">
+                        <fieldset>
+                            <div class="container text-center d-inline-block d-xl-flex justify-content-xl-center align-items-xl-center" style="padding: 10px;">
+                                <div class="col-md-2 d-flex flex-column justify-content-xl-center align-items-xl-right">
+                                    <label style="margin-bottom: 0px;text-align: center;float: left;font-size: 1em;">Starting time:</label>
+                                    <input id="start_time_hhmmss1" class="border rounded" type="time" data-format="hh:mm:ss" style="float: left; padding: 5px;height: 40px;text-align:center;font-size: 1em;" value="00:00:00" min="00:00:00" max="20:00:00" step="1">
+                                    <label style="margin-bottom: 0px;text-align: center;float: right;font-size: 1em;margin-top: 0.2em;">Duration:</label>
+                                    <input id="duration_input1" class="border rounded" type="number" value="4" min="1" max="50" step="1" style="display: left;text-align:center;padding: 5px;height: 40px;font-size: 1em;"></div>
+                                <div class="col-md-8 text-center d-xl-flex justify-content-xl-center align-items-xl-center">
+                                    <div class="btn-toolbar d-sm-flex d-xl-flex justify-content-sm-center align-items-sm-center justify-content-xl-center">
+                                        <input class="custom-range d-xl-flex flex-row justify-content-xl-center align-items-xl-center" id="rangeInputStart1" onchange="ajax_redraw()" oninput="correctTimeInput(this.value,1)" type="range" value="0" min="0" step="1" max="1802" style="/*width: initial;*//* margin: 29px; */min-width: initial;margin: 20px;">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-primary" type="button" onclick="redraw_to_start()"><i class="fa fa-fast-backward"></i>start</button>
+                                            <button class="btn btn-primary" type="button" onclick="ajax_redraw(-8)"><i class="fa fa-backward"></i>8sec</button>
+                                            <button class="btn btn-primary" type="button" onclick="ajax_redraw(-4)"><i class="fa fa-backward"></i>4sec</button>
+                                            <button class="btn btn-primary" type="button" onclick="ajax_redraw(-1)"><i class="fa fa-step-backward"></i>1sec</button>
+                                            <button class="btn btn-info" type="button" onclick="ajax_redraw(0,true)">
+                                                <div id="previous1" style="visibility: visible; width: auto; height: auto;"><i class="fa fa-rotate-left"></i>previous</div>
+                                                <div id="spinner1"  style="visibility: collapse; width: 0; height: 0;"><div class="spinner-border spinner-border-sm" role="status"></div>loading...</div>
+                                            </button>
+                                            <button class="btn btn-primary" type="button" onclick="ajax_redraw(1)"><i class="fa fa-step-forward"></i>1sec</button>
+                                            <button class="btn btn-primary" type="button" onclick="ajax_redraw(4)"><i class="fa fa-forward"></i>4sec</button>
+                                            <button class="btn btn-primary" type="button" onclick="ajax_redraw(8)"><i class="fa fa-forward"></i>8sec</button>
+                                            <button class="btn btn-primary" type="button" onclick="redraw_to_end()"><i class="fa fa-fast-forward"></i>end</button>
+                                        </div>
+
+                                        <div class="container-fluid">
+                                            <div class="row">
+                                                <div class="col-auto col-xl-6 text-center"></div>
+                                                <div class="col-xl-6 text-center"></div>
+                                                <div class="clearfix"></div>
+                                                <div class="clearfix"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column justify-content-xl-center align-items-xl-right">
+                                    <label style="margin-bottom: 0px;text-align: center;float:right;font-size: 1em;">Record:</label>
+                                    <select id="file_input1" onchange="ajax_redraw()" class="border rounded" style="float: right; padding: 5px;height: 40px;font-size: 1em;">
+                                    </select>
+                                    <label style="margin-bottom: 0px;text-align: center;float: right;font-size: 1em;margin-top: 0.2em;">Database:</label> {% if not request.args.get('fileup') %}
+                                    <select id="db_name1" onchange="repopulate_ecgs()" class="border rounded" style="float: right; padding: 5px;height: 40px;font-size: 1em;">
+                                    {% endif  %}
+                                    {% if request.args.get('fileup') %}
+                                    <select id="db_name1" onchange="repopulate_ecgs(1,'{{request.args.get('fileup')}}')" class="border rounded" style="float: right; padding: 5px;height: 40px;font-size: 1em;">
+                                    {% endif  %}
+
+                                    <optgroup label="Choose a database">
+                                        {% for db in dbs_list %}
+                                        <option value="{{db}}">{{db}}</option>
+                                        {% endfor %} {% if request.args.get('fileup') %}
+                                        <option value="Uploads" selected>Custom</option>
+                                        {%endif%}
+                                    </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-auto col-xl-6 text-center"></div>
+                                    <div class="col-xl-6 text-center"></div>
+                                    <div class="clearfix"></div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                </div>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-xl-6 text-center">
+                            <div id='timedomain_plot1'></div>
+                        </div>
+                        <div class="col-xl-6 text-center">
+                            <div id='freqdomain_plot1'></div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="btn-toolbar d-sm-flex d-xl-flex justify-content-sm-center align-items-sm-center justify-content-xl-center" style="margin: 10px;">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-info" type="button" onclick="add_table_row()"><i class="fa fa-tasks"></i>&nbsp;Add
+                to table</button>
+                            <button class="btn btn-info" type="button" onclick="clear_table()"><i class="fa fa-remove"></i>&nbsp;Clear
+                table</button>
+                            <button class="btn btn-warning" type="button" onclick="save_to_compare()"><i
+                  class="fa fa-save"></i>&nbsp;Save for comparison</button>
+                            <button class="btn btn-warning" type="button" onclick="clear_compare()"><i
+                  class="fa fa-remove"></i>&nbsp;Clear comparison</button>
+
+                            <button id="switch_2nd" class="btn btn-success" type="button" onclick="showhide_2nd()"><i
+                  class="fab fa-draft2digital"></i>&nbsp;<span>Show 2nd Visualizations</span></button>
+                            <!-- <button id="switch_2nd" class="btn btn-success" type="button"><i
+                    class="fas fa-refresh"></i>Sync&nbsp;<input type="checkbox" style="width: 16px;height: 16px;"></button> -->
+                        </div>
+                    </div>
+                </div>
+                <div class="container-fluid" id="plot2" style="visibility: collapse; height: 0px;">
+                    <script>
+                        var shown2nd = false;
+
+                        function showhide_2nd() {
+                            if (!shown2nd) {
+                                $("#plot2").css("visibility", "visible");
+                                $("#plot2").css("height", "auto");
+                                $("#switch_2nd span").html("Hide 2nd visualization")
+                                shown2nd = true;
+                            } else {
+                                $("#plot2").css("visibility", "hidden");
+                                $("#plot2").css("height", "0px");
+                                $("#switch_2nd span").html("Show 2nd visualization")
+                                shown2nd = false;
+                            }
+
+                        }
+                    </script>
+
+                    <div class="card-group">
+                        <div class="card">
+                            <fieldset>
+                                <div class="container text-center d-inline-block d-xl-flex justify-content-xl-center align-items-xl-center" style="padding: 10px;">
+                                    <div class="col-md-2 d-flex flex-column justify-content-xl-center align-items-xl-right">
+                                        <label style="margin-bottom: 0px;text-align: center;float: left;font-size: 1em;">Starting time:</label>
+                                        <input id="start_time_hhmmss2" class="border rounded" type="time" data-format="hh:mm:ss" style="float: left; padding: 5px;height: 40px;text-align:center;font-size: 1em;" value="00:00:00" min="00:00:00" max="20:00:00" step="1">
+                                        <label style="margin-bottom: 0px;text-align: center;float: right;font-size: 1em;margin-top: 0.2em;">Duration:</label>
+                                        <input id="duration_input2" class="border rounded" type="number" value="4" min="1" max="50" step="1" style="display: left;text-align:center;padding: 5px;height: 40px;font-size: 1em;"></div>
+                                    <div class="col-md-8 text-center d-xl-flex justify-content-xl-center align-items-xl-center">
+                                        <div class="btn-toolbar d-sm-flex d-xl-flex justify-content-sm-center align-items-sm-center justify-content-xl-center">
+                                            <input class="custom-range d-xl-flex flex-row justify-content-xl-center align-items-xl-center" id="rangeInputStart2" onchange="ajax_redraw(undefined,undefined,2)" oninput="correctTimeInput(this.value,2)" type="range" value="0" min="0" step="1" max="1802"
+                                                style="/*width: initial;*//* margin: 29px; */min-width: initial;margin: 20px;">
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-primary" type="button" onclick="redraw_to_start(2,undefined,2)"><i class="fa fa-fast-backward"></i>start</button>
+                                                <button class="btn btn-primary" type="button" onclick="ajax_redraw(-8,undefined,2)"><i class="fa fa-backward"></i>8sec</button>
+                                                <button class="btn btn-primary" type="button" onclick="ajax_redraw(-4,undefined,2)"><i class="fa fa-backward"></i>4sec</button>
+                                                <button class="btn btn-primary" type="button" onclick="ajax_redraw(-1,undefined,2)"><i class="fa fa-step-backward"></i>1sec</button>
+                                                <button class="btn btn-info" type="button" onclick="ajax_redraw(0,true,2)">
+                                                    <div id="previous2" style="visibility: visible; width: auto; height: auto;"><i class="fa fa-rotate-left"></i>previous</div>
+                                                    <div id="spinner2"  style="visibility: collapse; width: 0; height: 0;"><div class="spinner-border spinner-border-sm" role="status"></div>loading...</div>
+                                                </button>
+                                                <button class="btn btn-primary" type="button" onclick="ajax_redraw(1,undefined,2)"><i class="fa fa-step-forward"></i>1sec</button>
+                                                <button class="btn btn-primary" type="button" onclick="ajax_redraw(4,undefined,2)"><i class="fa fa-forward"></i>4sec</button>
+                                                <button class="btn btn-primary" type="button" onclick="ajax_redraw(8,undefined,2)"><i class="fa fa-forward"></i>8sec</button>
+                                                <button class="btn btn-primary" type="button" onclick="redraw_to_end(2,undefined,2)"><i class="fa fa-fast-forward"></i>end</button>
+                                            </div>
+
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col-auto col-xl-6 text-center"></div>
+                                                    <div class="col-xl-6 text-center"></div>
+                                                    <div class="clearfix"></div>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex flex-column justify-content-xl-center align-items-xl-right">
+                                        <label style="margin-bottom: 0px;text-align: center;float:right;font-size: 1em;">Record:</label>
+                                        <select id="file_input2" onchange="ajax_redraw(undefined,undefined,2)" class="border rounded" style="float: right; padding: 5px;height: 40px;font-size: 1em;">
+                                        </select>
+                                        <label style="margin-bottom: 0px;text-align: center;float: right;font-size: 1em;margin-top: 0.2em;">Database:</label>
+                                        <select id="db_name2" onchange="repopulate_ecgs(2)" class="border rounded" style="float: right; padding: 5px;height: 40px;font-size: 1em;">
+  <optgroup label="Choose a database">
+    {% for db in dbs_list %}
+    <option value="{{db}}" selected="">{{db}}</option>
+    {% endfor %}
+  </optgroup>
+</select>
+                                    </div>
+                                </div>
+
+
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-auto col-xl-6 text-center"></div>
+                                        <div class="col-xl-6 text-center"></div>
+                                        <div class="clearfix"></div>
+                                        <div class="clearfix"></div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-xl-6 text-center">
+                            <div id='timedomain_plot2'></div>
+                        </div>
+                        <div class="col-xl-6 text-center">
+                            <div id='freqdomain_plot2'></div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="btn-toolbar d-sm-flex d-xl-flex justify-content-sm-center align-items-sm-center justify-content-xl-center" style="margin: 10px;">
+
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-info" type="button" onclick="add_table_row(2)"><i class="fa fa-tasks"></i>&nbsp;Add
+                to table</button>
+                            <button class="btn btn-info" type="button" onclick="clear_table()"><i class="fa fa-remove"></i>&nbsp;Clear
+                table</button>
+                            <button class="btn btn-warning" type="button" onclick="save_to_compare(2)"><i
+                  class="fa fa-save"></i>&nbsp;Save for comparison</button>
+                            <button class="btn btn-warning" type="button" onclick="clear_compare(2)"><i
+                  class="fa fa-remove"></i>&nbsp;Clear comparison</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="text-center mb-0">Parameters</h5>
+                        <button class="btn btn-success" onclick="fnExcelReport()"><i class="fa fa-table"></i>Export to
+              Excel</button>
+                    </div>
+                </div>
+            </div>
+            <main class="page landing-page">
+                <section class="clean-block about-us">
+                    <div class="container">
+                        <div class="row">
+                            <div class="bootstrap_datatables" style="min-height: auto;">
+                                <div class="container py-10">
+                                    <div class="row py-5">
+                                        <div class="col-lg-10 mx-auto">
+                                            <div class="card rounded shadow border-0">
+                                                <div class="card-body p-5 bg-white rounded">
+                                                    <div class="table-responsive">
+                                                        <table id="table_results" style="width:100%" class="table table-striped table-bordered dataTable no-footer">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>File</th>
+                                                                    <th>Start</th>
+                                                                    <th>End</th>
+                                                                    <th>Duration</th>
+                                                                    <th>L1</th>
+                                                                    <th>V1</th>
+                                                                    <th>L2</th>
+                                                                    <th>V2</th>
+                                                                    <th>L3</th>
+                                                                    <th>V3</th>
+                                                                    <th>LM</th>
+                                                                    <th>VM</th>
+                                                                    <th>LN</th>
+                                                                    <th>VN</th>
+                                                                    <th>A1</th>
+                                                                    <th>A2</th>
+                                                                    <th>A3</th>
+                                                                    <th>AM</th>
+                                                                    <th>AL</th>
+                                                                    <th>AH</th>
+                                                                    <th>AT</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section class="clean-block slider dark" style="padding-bottom: 0;">
+                </section>
+            </main>
+            <iframe id="txtArea1" style="display:none"></iframe>
+            <script src="assets/js/jquery.min.js"></script>
+            <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/baguettebox.js/1.10.0/baguetteBox.min.js"></script>
+            <script src="assets/js/smoothproducts.min.js"></script>
+            <script src="assets/js/theme.js"></script>
+            <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+            <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+            <script src="static/bootstrap/js/Bootstrap-DataTables.js"></script>
+
+
+            {% if not request.args.get('fileup') %}
+            <script>
+                repopulate_ecgs(1);
+                repopulate_ecgs(2);
+            </script>
+            {% endif %} {% if request.args.get('fileup') %}
+            <script>
+                repopulate_ecgs(1, '{{request.args.get("fileup")}}');
+                repopulate_ecgs(2);
+            </script>
+            {% endif %}
+
+            <script>
+                function fnExcelReport() {
+                    var tab_text = "<table border='2px'><tr bgcolor='#87AFC6'>";
+                    var textRange;
+                    var j = 0;
+                    tab = document.getElementById('table_results'); // id of table
+
+                    for (j = 0; j < tab.rows.length; j++) {
+                        tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+                        //tab_text=tab_text+"</tr>";
+                    }
+
+                    tab_text = tab_text + "</table>";
+                    tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, ""); //remove if u want links in your table
+                    tab_text = tab_text.replace(/<img[^>]*>/gi, ""); // remove if u want images in your table
+                    tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, ""); // reomves input params
+
+                    var ua = window.navigator.userAgent;
+                    var msie = ua.indexOf("MSIE ");
+
+                    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) // If Internet Explorer
+                    {
+                        txtArea1.document.open("txt/html", "replace");
+                        txtArea1.document.write(tab_text);
+                        txtArea1.document.close();
+                        txtArea1.focus();
+                        sa = txtArea1.document.execCommand("SaveAs", true, "Say Thanks to Sumit.xls");
+                    } else //other browser not tested on IE 11
+                        sa = window.open('data:application/vnd.ms-excel,' + encodeURIComponent(tab_text));
+
+                    return (sa);
+                }
+            </script>
+            <style>
+                .modebar {
+                    left: 35%;
+                    zoom: 1.5;
+                    top: 1em !important;
+                }
+                /* .modebar-container {
+                        top: 5em;
+                        right: 50px;
+                    } */
+            </style>
+            {% include 'footer.html' %}
+</body>
+
+</html>
